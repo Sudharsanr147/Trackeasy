@@ -3,63 +3,77 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
-    <title>WorkFlow Pro | Deliverables Tracker</title>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=DM+Serif+Display&display=swap" rel="stylesheet"/>
+    <title>Work Tracker Pro | Deliverables</title>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=DM+Serif+Display&display=swap" rel="stylesheet"/>
     
     <style>
         :root {
-            /* Modernized Palette */
             --bg: #0f172a;
             --surface: #1e293b;
-            --surface2: #334155;
-            --accent: #6366f1; /* Premium Indigo */
-            --accent-glow: rgba(99, 102, 241, 0.2);
+            --surface-hover: #334155;
+            --accent: #6366f1;
+            --accent-glow: rgba(99, 102, 241, 0.3);
             --text: #f8fafc;
-            --muted: #94a3b8;
-            --border: #334155;
-            --radius: 12px;
-            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --text-muted: #94a3b8;
+            --border: rgba(255,255,255,0.08);
+            --radius: 16px;
             --green: #10b981;
             --red: #ef4444;
         }
 
-        /* Light Mode Overrides */
-        body.light {
-            --bg: #f1f5f9;
-            --surface: #ffffff;
-            --surface2: #f8fafc;
-            --text: #0f172a;
-            --muted: #64748b;
-            --border: #e2e8f0;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            margin: 0;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; transition: background 0.3s; }
-
-        /* Premium Header */
-        header {
-            background: var(--surface);
-            padding: 1rem 2rem;
+        /* Modern Navigation */
+        nav {
             display: flex;
-            align-items: center;
             justify-content: space-between;
+            align-items: center;
+            padding: 1.2rem 2rem;
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--border);
-            box-shadow: var(--shadow);
             position: sticky;
             top: 0;
             z-index: 100;
         }
 
-        .logo { font-family: 'DM Serif Display', serif; font-size: 1.5rem; letter-spacing: -0.5px; }
+        .logo {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.6rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
         .logo span { color: var(--accent); }
 
-        /* Dashboard Cards */
-        .dashboard-grid {
+        .pro-badge {
+            background: linear-gradient(to right, #f59e0b, #d97706);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.65rem;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 6px;
+            text-transform: uppercase;
+        }
+
+        /* Dashboard Statistics */
+        .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
             gap: 1.5rem;
             padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
         }
 
         .stat-card {
@@ -67,129 +81,196 @@
             padding: 1.5rem;
             border-radius: var(--radius);
             border: 1px solid var(--border);
-            transition: transform 0.2s, border-color 0.2s;
-            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
         }
 
         .stat-card:hover {
             transform: translateY(-5px);
             border-color: var(--accent);
-            box-shadow: 0 0 20px var(--accent-glow);
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
         }
 
-        .stat-val { font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; }
-        .stat-label { color: var(--muted); font-size: 0.875rem; text-transform: uppercase; }
+        .stat-card h3 {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0 0 0.5rem 0;
+        }
 
-        /* Task Table Styling */
-        .content-wrap { padding: 0 2rem 2rem; }
-        .table-container {
+        .stat-card .value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+
+        /* Content Area */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem 5rem;
+        }
+
+        .header-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.8rem;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 15px var(--accent-glow);
+        }
+
+        .btn-primary:hover {
+            filter: brightness(1.1);
+            transform: scale(1.02);
+        }
+
+        /* Modern Task Table */
+        .table-wrapper {
             background: var(--surface);
             border-radius: var(--radius);
             border: 1px solid var(--border);
             overflow: hidden;
-            box-shadow: var(--shadow);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
         }
 
-        table { width: 100%; border-collapse: collapse; }
-        th { 
-            background: var(--surface2); 
-            padding: 1rem; 
-            text-align: left; 
-            font-size: 0.75rem; 
-            text-transform: uppercase; 
-            color: var(--muted);
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
         }
-        td { padding: 1rem; border-bottom: 1px solid var(--border); font-size: 0.95rem; }
 
-        tr:hover { background: var(--surface2); }
+        th {
+            background: rgba(255,255,255,0.03);
+            padding: 1.2rem 1.5rem;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            border-bottom: 1px solid var(--border);
+        }
 
-        /* Modern Buttons */
-        .btn-add {
-            background: var(--accent);
-            color: white;
-            border: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: var(--radius);
+        td {
+            padding: 1.2rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.95rem;
+        }
+
+        tr:last-child td { border-bottom: none; }
+
+        tr:hover td { background: rgba(255,255,255,0.01); }
+
+        .status-pill {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
             font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .status-pending { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+        .status-done { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+
+        /* Action Buttons */
+        .action-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: opacity 0.2s;
+            padding: 5px;
+            transition: color 0.2s;
         }
-        
-        .btn-add:hover { opacity: 0.9; }
 
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 4rem 2rem;
-            color: var(--muted);
-        }
-        .empty-state h3 { color: var(--text); margin-bottom: 1rem; }
+        .action-btn:hover { color: var(--text); }
+        .action-btn.delete:hover { color: var(--red); }
 
-        /* Pro Badge */
-        .pro-badge {
-            background: linear-gradient(45deg, #f59e0b, #d97706);
-            color: white;
-            font-size: 0.6rem;
-            padding: 2px 6px;
-            border-radius: 4px;
-            vertical-align: middle;
-            margin-left: 5px;
+        /* Floating Action Button for Mobile */
+        @media (max-width: 768px) {
+            .stats-grid { grid-template-columns: 1fr; padding: 1rem; }
+            .container { padding: 0 1rem 5rem; }
+            th:nth-child(3), td:nth-child(3) { display: none; } /* Hide Owner on small screens */
+            .header-actions h2 { font-size: 1.2rem; }
         }
     </style>
 </head>
-<body class="dark">
-    <header>
-        <div class="logo">WorkFlow<span>Pro</span><span class="pro-badge">PRO</span></div>
-        <div class="header-actions">
-            <button class="btn-add" onclick="openModal()">+ New Deliverable</button>
+<body>
+
+    <nav>
+        <div class="logo">Work<span>Tracker</span> <div class="pro-badge">Pro</div></div>
+        <div style="display: flex; gap: 15px; align-items: center;">
+            <div id="user-display" style="font-size: 0.8rem; color: var(--text-muted);">Guest User</div>
+            <div style="width: 35px; height: 35px; border-radius: 50%; background: var(--surface-hover); border: 1px solid var(--border);"></div>
         </div>
-    </header>
+    </nav>
 
-    <main>
-        <section class="dashboard-grid">
-            <div class="stat-card">
-                <div class="stat-val" id="count-total">24</div>
-                <div class="stat-label">Total Tasks</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-val" style="color: var(--red);" id="count-urgent">3</div>
-                <div class="stat-label">Urgent</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-val" style="color: var(--green);" id="count-done">12</div>
-                <div class="stat-label">Completed</div>
-            </div>
-        </section>
+    <section class="stats-grid">
+        <div class="stat-card">
+            <h3>Active Deliverables</h3>
+            <div class="value" id="stat-active">0</div>
+        </div>
+        <div class="stat-card">
+            <h3>Pending Priority</h3>
+            <div class="value" id="stat-pending" style="color: #f59e0b;">0</div>
+        </div>
+        <div class="stat-card">
+            <h3>Completion Rate</h3>
+            <div class="value" id="stat-rate">0%</div>
+        </div>
+    </section>
 
-        <section class="content-wrap">
-            <div class="table-container">
-                <table id="task-table">
-                    <thead>
-                        <tr>
-                            <th>Deliverable</th>
-                            <th>Owner</th>
-                            <th>Due Date</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="task-list-body">
-                        </tbody>
-                </table>
-                <div id="empty-view" class="empty-state" style="display:none;">
-                    <h3>No tasks found</h3>
-                    <p>Get started by creating your first deliverable tracker.</p>
-                </div>
-            </div>
-        </section>
-    </main>
+    <div class="container">
+        <div class="header-actions">
+            <h2 style="font-family: 'DM Serif Display', serif;">My Deliverables</h2>
+            <button class="btn-primary" onclick="toggleModal(true)">
+                <span>+</span> New Deliverable
+            </button>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Deliverable</th>
+                        <th>Status</th>
+                        <th>Owner</th>
+                        <th>Due Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="tracker-body">
+                    </tbody>
+            </table>
+        </div>
+    </div>
 
     <script>
-        // Use the logic from your index.html here, ensuring that 
-        // you update functions like renderTasks() to target the new table/card structure.
+        // Your existing Firebase init and data functions 
+        // Just make sure to update the element IDs to match the new UI.
+        
+        // Example dynamic update function for the new stats:
+        function updateDashboardStats(total, pending, done) {
+            document.getElementById('stat-active').innerText = total;
+            document.getElementById('stat-pending').innerText = pending;
+            const rate = total > 0 ? Math.round((done / total) * 100) : 0;
+            document.getElementById('stat-rate').innerText = rate + "%";
+        }
     </script>
 </body>
 </html>
